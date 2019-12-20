@@ -19,4 +19,4 @@ class Car:
             self.velocity = 0
             print("SAMOCHOD SIE ZATRZYMAL!",self.name)
             
-            
+

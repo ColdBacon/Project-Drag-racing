@@ -15,3 +15,5 @@ while car1.distance<meta and car2.distance<meta:
 
 print("DISTANCE:",car1.distance, car2.distance)
 print("PREDKOSC:",car1.velocity, car2.velocity)
+
+czas = 0

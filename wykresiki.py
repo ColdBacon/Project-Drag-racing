@@ -2,24 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 
-slope = 0.1 #nachylenie
+slope = 0.4 #nachylenie
 meta = 402  #maksymalny dystans
 rho = 1.225 #rho = gestosc powietrza(kg/m^3)
 tf = 60.0   # maksymalny czas symulacji
 # animate plots?
 animate = True  # True / False
-Cd1 = 0.24  #wspolczynnik oporu
-Cd2 = 0.24
-A1 = 0.5    #pole powierzchni czolowej
-A2 = 0.5
-Fp1 = 5000  #sila ciagu samochodu
-Fp2 = 5000
-load1 = 800.0  # kg
-load2 = 700.0  # kg
+Cd1 = 0.29  #wspolczynnik oporu
+Cd2 = 0.29
+A1 = 0.65    #pole powierzchni czolowej
+A2 = 0.65
+moc1 = 100000  #moc silnika [W]
+moc2 = 90000
+load1 = 1200.0  # kg
+load2 = 1000.0  # kg
 
 
 # define model
-def vehicle(v, t, load, Cd, rho, A, Fp):
+def vehicle(v, t, load, Cd, rho, A, moc):
     # inputs
     #  v    = vehicle velocity (m/s)
     #  t    = time (sec)
@@ -28,7 +28,11 @@ def vehicle(v, t, load, Cd, rho, A, Fp):
     # A = 5.0       A = cross-sectional area (m^2)
     # Fp = 5000       Fp = sila cigau samochodu
     # calculate derivative of the velocity
-    dv_dt = (Fp - 0.5 * rho * Cd * A * v ** 2 - load * 10 * slope) / load
+    if v<1:
+        mocnyful=moc
+    else:
+        mocnyful=moc/v
+    dv_dt = (mocnyful - 0.5 * rho * Cd * A * v ** 2 - load * 10 * slope) / load
     return dv_dt
 
 
@@ -62,8 +66,8 @@ u = 0
 # simulate with ODEINT
 while True:
     if dst1[i] < meta and dst2[i] < meta:
-        v1 = odeint(vehicle, v01, [0, delta_t], args=(load1, Cd1, rho, A1, Fp1))
-        v2 = odeint(vehicle, v02, [0, delta_t], args=(load2, Cd2, rho, A2, Fp2))
+        v1 = odeint(vehicle, v01, [0, delta_t], args=(load1, Cd1, rho, A1, moc1))
+        v2 = odeint(vehicle, v02, [0, delta_t], args=(load2, Cd2, rho, A2, moc2))
         if v1[-1] < 0:
             v1[-1] = 0
         if v2[-1] < 0:
@@ -99,6 +103,7 @@ while True:
             print(dst1[i], vs1[i], i)
         else:
             print("Wygral drugi")
+            print(dst2[i], vs2[i], i)
         break
     i += 1
 

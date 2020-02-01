@@ -2,25 +2,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 
-slope = 0.4
+slope = 0.1
 meta = 402
+tf = 60.0                 # maksymalny czas symulacji
 # animate plots?
 animate=True # True / False
+Cd1 = 0.24
+Cd2 = 0.24
+rho1 = 1.225
+rho2 = 1.225
+A1 = 0.5
+A2 = 0.5
+Fp1 = 5000
+Fp2 = 5000
+load1 = 800.0 # kg
+load2 = 700.0 # kg
 
 # define model
-def vehicle(v,t,u,load):
+def vehicle(v,t,load,Cd,rho,A,Fp):
     # inputs
     #  v    = vehicle velocity (m/s)
     #  t    = time (sec)
-    #  u    = gas pedal position (-50% to 100%)
-    #  load = passenger load + cargo (kg)
-    Cd = 0.24    # drag coefficient
-    rho = 1.225  # air density (kg/m^3)
-    A = 5.0      # cross-sectional area (m^2)
-    Fp = 5000      # siła ciągu samochodu
-    m = 500      # vehicle mass (kg)
+    #  masa = waga samochodu
+    #Cd = 0.24    Cd = drag coefficient
+    #rho = 1.225   rho = air density (kg/m^3)
+    #A = 5.0       A = cross-sectional area (m^2)
+    #Fp = 5000       Fp = siła ciągu samochodu
     # calculate derivative of the velocity
-    dv_dt = (Fp - 0.5*rho*Cd*A*v**2-(m+load)*10*slope)/(m+load)
+    dv_dt = (Fp - 0.5*rho*Cd*A*v**2-(load)*10*slope)/(load)
     return dv_dt
 
 tf = 60.0                 # final time for simulation
@@ -31,7 +40,7 @@ ts = np.linspace(0,tf,nsteps) # linearly spaced time vector
 
 # simulate step test operation
 # passenger(s) + cargo load
-load = 200.0 # kg
+load = 800.0 # kg
 # velocity initial condition
 v01 = 0.0
 v02 = 0.0
@@ -54,8 +63,8 @@ u=0
 # simulate with ODEINT
 while True:
     if dst1[i]<meta and dst2[i]<meta:
-        v1 = odeint(vehicle,v01,[0,delta_t],args=(u,load))
-        v2 = odeint(vehicle,v02,[0,delta_t],args=(u,300))
+        v1 = odeint(vehicle,v01,[0,delta_t],args=(load1,Cd1,rho1,A1,Fp1))
+        v2 = odeint(vehicle,v02,[0,delta_t],args=(load2,Cd2,rho2,A2,Fp2))
         if v1[-1]<0:
             v1[-1]=0
         if v2[-1]<0:

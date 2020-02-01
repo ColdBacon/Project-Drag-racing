@@ -2,117 +2,116 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 
-slope = 0.1
-meta = 402
-tf = 60.0                 # maksymalny czas symulacji
+slope = 0.1 #nachylenie
+meta = 402  #maksymalny dystans
+rho = 1.225 #rho = gestosc powietrza(kg/m^3)
+tf = 60.0   # maksymalny czas symulacji
 # animate plots?
-animate=True # True / False
-Cd1 = 0.24
+animate = True  # True / False
+Cd1 = 0.24  #wspolczynnik oporu
 Cd2 = 0.24
-rho1 = 1.225
-rho2 = 1.225
-A1 = 0.5
+A1 = 0.5    #pole powierzchni czolowej
 A2 = 0.5
-Fp1 = 5000
+Fp1 = 5000  #sila ciagu samochodu
 Fp2 = 5000
-load1 = 800.0 # kg
-load2 = 700.0 # kg
+load1 = 800.0  # kg
+load2 = 700.0  # kg
+
 
 # define model
-def vehicle(v,t,load,Cd,rho,A,Fp):
+def vehicle(v, t, load, Cd, rho, A, Fp):
     # inputs
     #  v    = vehicle velocity (m/s)
     #  t    = time (sec)
-    #  masa = waga samochodu
-    #Cd = 0.24    Cd = drag coefficient
-    #rho = 1.225   rho = air density (kg/m^3)
-    #A = 5.0       A = cross-sectional area (m^2)
-    #Fp = 5000       Fp = siła ciągu samochodu
+    # Cd = 0.24    Cd = drag coefficient
+    # rho = 1.225   rho = air density (kg/m^3)
+    # A = 5.0       A = cross-sectional area (m^2)
+    # Fp = 5000       Fp = sila cigau samochodu
     # calculate derivative of the velocity
-    dv_dt = (Fp - 0.5*rho*Cd*A*v**2-(load)*10*slope)/(load)
+    dv_dt = (Fp - 0.5 * rho * Cd * A * v ** 2 - load * 10 * slope) / load
     return dv_dt
 
-tf = 60.0                 # final time for simulation
-delta_t = 0.1   # how long is each time step?
-nsteps = int(tf/delta_t+1)
+
+delta_t = 0.1  # how long is each time step?
+nsteps = int(tf / delta_t + 1)
 print(nsteps)
-ts = np.linspace(0,tf,nsteps) # linearly spaced time vector
+ts = np.linspace(0, tf, nsteps)  # linearly spaced time vector
 
 # simulate step test operation
 # passenger(s) + cargo load
-load = 800.0 # kg
+load = 800.0  # kg
 # velocity initial condition
 v01 = 0.0
 v02 = 0.0
 # set point
-#sp = 25.0
+# sp = 25.0
 # for storing the results
 vs1 = np.zeros(nsteps)
 vs2 = np.zeros(nsteps)
-#sps = np.zeros(nsteps)
+# sps = np.zeros(nsteps)
 dst1 = np.zeros(nsteps)
 dst2 = np.zeros(nsteps)
 
-plt.figure(1,figsize=(5,4))
+plt.figure(1, figsize=(5, 4))
 if animate:
     plt.ion()
     plt.show()
 
-i=0
-u=0
+i = 0
+u = 0
 # simulate with ODEINT
 while True:
-    if dst1[i]<meta and dst2[i]<meta:
-        v1 = odeint(vehicle,v01,[0,delta_t],args=(load1,Cd1,rho1,A1,Fp1))
-        v2 = odeint(vehicle,v02,[0,delta_t],args=(load2,Cd2,rho2,A2,Fp2))
-        if v1[-1]<0:
-            v1[-1]=0
-        if v2[-1]<0:
-            v2[-1]=0
-        if v1[-1]==0 and v2[-1]==0:
-            print("Oba samochody się zatrzymały")
+    if dst1[i] < meta and dst2[i] < meta:
+        v1 = odeint(vehicle, v01, [0, delta_t], args=(load1, Cd1, rho, A1, Fp1))
+        v2 = odeint(vehicle, v02, [0, delta_t], args=(load2, Cd2, rho, A2, Fp2))
+        if v1[-1] < 0:
+            v1[-1] = 0
+        if v2[-1] < 0:
+            v2[-1] = 0
+        if v1[-1] == 0 and v2[-1] == 0:
+            print("Oba samochody sie zatrzymaly")
             break
-        v01 = v1[-1]   # take the last value
+        v01 = v1[-1]  # take the last value
         v02 = v2[-1]
-        vs1[i+1] = v01 # store the velocity for plotting
-        vs2[i+1] = v02
-        #sps[i+1] = sp
-        dst1[i+1] = dst1[i]+v01*delta_t
-        dst2[i+1] = dst2[i]+v02*delta_t
+        vs1[i + 1] = v01  # store the velocity for plotting
+        vs2[i + 1] = v02
+        # sps[i+1] = sp
+        dst1[i + 1] = dst1[i] + v01 * delta_t
+        dst2[i + 1] = dst2[i] + v02 * delta_t
 
         # plot results
-        #if animate:
-        plt.clf()       #clf=wyczyść wszystko
-        plt.subplot(2,1,1)
-        plt.plot(ts[0:i+1],vs1[0:i+1],'b-',linewidth=3)
-        plt.plot(ts[0:i+1],vs2[0:i+1],'k--',linewidth=2)
+        # if animate:
+        plt.clf()  # clf=wyczysc wszystko
+        plt.subplot(2, 1, 1)
+        plt.plot(ts[0:i + 1], vs1[0:i + 1], 'b-', linewidth=3)
+        plt.plot(ts[0:i + 1], vs2[0:i + 1], 'k--', linewidth=2)
         plt.ylabel('Velocity (m/s)')
-        plt.legend(['Velocity1','Velocity2'],loc=2)
-        plt.subplot(2,1,2)
-        plt.plot(ts[0:i+1],dst1[0:i+1],'b--',linewidth=3)
-        plt.plot(ts[0:i+1],dst2[0:i+1],'k--',linewidth=3)
+        plt.legend(['Velocity1', 'Velocity2'], loc=2)
+        plt.subplot(2, 1, 2)
+        plt.plot(ts[0:i + 1], dst1[0:i + 1], 'b--', linewidth=3)
+        plt.plot(ts[0:i + 1], dst2[0:i + 1], 'k--', linewidth=3)
         plt.ylabel('Distance (m)')
-        plt.legend(['Distance1','Distance2'],loc=2)
+        plt.legend(['Distance1', 'Distance2'], loc=2)
         plt.pause(0.01)
     else:
-        if dst1[i]>dst2[i]:
-            print("Wygrał 1szy")
-            print(dst1[i],vs1[i],i)
+        if dst1[i] > dst2[i]:
+            print("Wygral 1szy")
+            print(dst1[i], vs1[i], i)
         else:
-            print("Wygrał drugi")
+            print("Wygral drugi")
         break
-    i+=1
+    i += 1
 
 if not animate:
     # plot results
-    plt.subplot(2,1,1)
-    plt.plot(ts,vs1,'b-',linewidth=3)
-    plt.plot(ts,vs2,'k--',linewidth=2)
+    plt.subplot(2, 1, 1)
+    plt.plot(ts, vs1, 'b-', linewidth=3)
+    plt.plot(ts, vs2, 'k--', linewidth=2)
     plt.ylabel('Velocity (m/s)')
-    plt.legend(['Velocity1','Velocity2'],loc=2)
-    plt.subplot(2,1,2)
-    plt.plot(ts,dst1,'b--',linewidth=3)
-    plt.plot(ts,dst2,'k--',linewidth=3)
+    plt.legend(['Velocity1', 'Velocity2'], loc=2)
+    plt.subplot(2, 1, 2)
+    plt.plot(ts, dst1, 'b--', linewidth=3)
+    plt.plot(ts, dst2, 'k--', linewidth=3)
     plt.ylabel('Distance (m)')
-    plt.legend(['Distance1','Distance2'],loc=2)
+    plt.legend(['Distance1', 'Distance2'], loc=2)
     plt.show()

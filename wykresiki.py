@@ -1,24 +1,38 @@
 import numpy as np
+import sys
+import os
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 from scipy.integrate import odeint
+from itertools import count
 
-slope = 0.4 #nachylenie
-meta = 402  #maksymalny dystans
+
+#co jesli nie podamy wszystkich wartosci
+
+# for storing the results
+vs1 = [0]
+vs2 = [0]
+# sps = np.zeros(nsteps)
+dst1 = [0]
+dst2 = [0]
+
+slope = float(sys.argv[1]) #nachylenie 0.4
+meta = float(sys.argv[2])  #maksymalny dystans 402
 rho = 1.225 #rho = gestosc powietrza(kg/m^3)
 tf = 60.0   # maksymalny czas symulacji
-# animate plots?
-animate = True  # True / False
-Cd1 = 0.29  #wspolczynnik oporu
-Cd2 = 0.29
-A1 = 0.65    #pole powierzchni czolowej
-A2 = 0.65
-moc1 = 100000  #moc silnika [W]
-moc2 = 90000
-load1 = 1200.0  # kg
-load2 = 1000.0  # kg
 
+Cd1 = float(sys.argv[7])  #wspolczynnik oporu 0.29
+Cd2 = float(sys.argv[8])
+A1 = float(sys.argv[9]) #pole powierzchni czolowej 0.65
+A2 = float(sys.argv[10])
+moc1 = float(sys.argv[3])  #moc silnika [W] 100000
+moc2 = float(sys.argv[4]) #90000
+load1 = float(sys.argv[5])  # kg 1200
+load2 = float(sys.argv[6])  # kg 1000
 
-# define model
+v01 = 0.0
+v02 = 0.0
+
 def vehicle(v, t, load, Cd, rho, A, moc):
     # inputs
     #  v    = vehicle velocity (m/s)
@@ -35,80 +49,32 @@ def vehicle(v, t, load, Cd, rho, A, moc):
     dv_dt = (mocnyful - 0.5 * rho * Cd * A * v ** 2 - load * 10 * slope) / load
     return dv_dt
 
-
 delta_t = 0.1  # how long is each time step?
 nsteps = int(tf / delta_t + 1)
 print(nsteps)
-ts = np.linspace(0, tf, nsteps)  # linearly spaced time vector
+ts =[0]
+index = count()
+i=0
+next(index)
 
-# simulate step test operation
-# passenger(s) + cargo load
-load = 800.0  # kg
-# velocity initial condition
-v01 = 0.0
-v02 = 0.0
-# set point
-# sp = 25.0
-# for storing the results
-vs1 = np.zeros(nsteps)
-vs2 = np.zeros(nsteps)
-# sps = np.zeros(nsteps)
-dst1 = np.zeros(nsteps)
-dst2 = np.zeros(nsteps)
-
-plt.figure(1, figsize=(5, 4))
-if animate:
-    plt.ion()
-    plt.show()
-
-i = 0
-u = 0
-# simulate with ODEINT
-while True:
-    if dst1[i] < meta and dst2[i] < meta:
-        v1 = odeint(vehicle, v01, [0, delta_t], args=(load1, Cd1, rho, A1, moc1))
-        v2 = odeint(vehicle, v02, [0, delta_t], args=(load2, Cd2, rho, A2, moc2))
-        if v1[-1] < 0:
-            v1[-1] = 0
-        if v2[-1] < 0:
-            v2[-1] = 0
-        if v1[-1] == 0 and v2[-1] == 0:
-            print("Oba samochody sie zatrzymaly")
-            break
-        v01 = v1[-1]  # take the last value
-        v02 = v2[-1]
-        vs1[i + 1] = v01  # store the velocity for plotting
-        vs2[i + 1] = v02
-        # sps[i+1] = sp
-        dst1[i + 1] = dst1[i] + v01 * delta_t
-        dst2[i + 1] = dst2[i] + v02 * delta_t
-
-        # plot results
-        # if animate:
-        plt.clf()  # clf=wyczysc wszystko
-        plt.subplot(2, 1, 1)
-        plt.plot(ts[0:i + 1], vs1[0:i + 1], 'b-', linewidth=3)
-        plt.plot(ts[0:i + 1], vs2[0:i + 1], 'k--', linewidth=2)
-        plt.ylabel('Velocity (m/s)')
-        plt.legend(['Velocity1', 'Velocity2'], loc=2)
-        plt.subplot(2, 1, 2)
-        plt.plot(ts[0:i + 1], dst1[0:i + 1], 'b--', linewidth=3)
-        plt.plot(ts[0:i + 1], dst2[0:i + 1], 'k--', linewidth=3)
-        plt.ylabel('Distance (m)')
-        plt.legend(['Distance1', 'Distance2'], loc=2)
-        plt.pause(0.01)
+def animate(i):
+    if(len(dst1)>0):
+        if dst1[-1] < meta and dst2[-1] < meta:
+            v1 = odeint(vehicle, vs1[-1], [0, delta_t], args=(load1, Cd1, rho, A1, moc1))
+            v2 = odeint(vehicle, vs2[-1], [0, delta_t], args=(load2, Cd2, rho, A2, moc2))
+            v01 = v1[-1]
+            v02 = v2[-1]
+            vs1.append(v01)
+            vs2.append(v02)
+            dst1.append(dst1[-1] + v01 * delta_t)
+            dst2.append(dst2[-1] + v02 * delta_t)
+            ts.append(next(index)*delta_t)
     else:
-        if dst1[i] > dst2[i]:
-            print("Wygral 1szy")
-            print(dst1[i], vs1[i], i)
-        else:
-            print("Wygral drugi")
-            print(dst2[i], vs2[i], i)
-        break
-    i += 1
-
-if not animate:
-    # plot results
+        dst1.append(0)
+        dst2.append(0)
+        v1 = odeint(vehicle, 0, [0, delta_t], args=(load1, Cd1, rho, A1, moc1))
+        v2 = odeint(vehicle, 0, [0, delta_t], args=(load2, Cd2, rho, A2, moc2))
+        ts.append(next(index)*delta_t)
     plt.subplot(2, 1, 1)
     plt.plot(ts, vs1, 'b-', linewidth=3)
     plt.plot(ts, vs2, 'k--', linewidth=2)
@@ -119,4 +85,7 @@ if not animate:
     plt.plot(ts, dst2, 'k--', linewidth=3)
     plt.ylabel('Distance (m)')
     plt.legend(['Distance1', 'Distance2'], loc=2)
-    plt.show()
+
+ani = FuncAnimation(plt.gcf(),animate,interval=100)
+
+plt.show()
